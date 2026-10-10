@@ -8,7 +8,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-taskflow}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskflow}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # Host port is intentionally non-standard (15432) to avoid clashing with any
+      # PostgreSQL already installed on the machine (often 5432).
+      - "${POSTGRES_PORT:-15432}:5432"
     volumes:
       - taskflow-pgdata:/var/lib/postgresql/data
     healthcheck:

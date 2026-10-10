@@ -6,7 +6,7 @@ spring:
     # Real environment variables always take precedence.
     import: "optional:file:.env[.properties]"
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/taskflow}
+    url: ${DB_URL:jdbc:postgresql://localhost:15432/taskflow}
     username: ${DB_USERNAME:taskflow}
     password: ${DB_PASSWORD:taskflow}
   jpa:
