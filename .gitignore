@@ -1,0 +1,39 @@
+# ---- Environment / secrets ----
+.env
+.env.*
+!.env.example
+*.local
+
+# ---- Java / Maven (backend) ----
+backend/target/
+backend/!.mvn/wrapper/maven-wrapper.properties
+*.class
+*.jar
+*.war
+!backend/.mvn/wrapper/maven-wrapper.jar
+hs_err_pid*
+replay_pid*
+
+# ---- Node / Next.js (frontend) ----
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/next-env.d.ts
+frontend/*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ---- IDE / OS ----
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- Logs / misc ----
+*.log
+logs/
