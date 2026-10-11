@@ -8,6 +8,7 @@ import com.taskflow.dto.response.ProjectSummaryResponse;
 import com.taskflow.dto.response.UserSummaryResponse;
 import com.taskflow.entity.Project;
 import com.taskflow.entity.User;
+import com.taskflow.entity.enums.ActivityType;
 import com.taskflow.entity.enums.ProjectStatus;
 import com.taskflow.entity.enums.Role;
 import com.taskflow.exception.DuplicateResourceException;
@@ -27,13 +28,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Project lifecycle including membership management. Authorization rules:
- * <ul>
- *   <li>create: ADMIN or MANAGER;</li>
- *   <li>view: ADMIN, the owner, or a member;</li>
- *   <li>update/membership: ADMIN, the owner, or a MANAGER member;</li>
- *   <li>delete: ADMIN or the owner.</li>
- * </ul>
+ * Project lifecycle including membership management. Authorisation rules live in
+ * {@link ProjectAccessService}.
  */
 @Service
 public class ProjectService {
@@ -42,13 +38,18 @@ public class ProjectService {
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
     private final UserMapper userMapper;
+    private final ProjectAccessService projectAccess;
+    private final ActivityService activityService;
 
     public ProjectService(ProjectRepository projectRepository, UserRepository userRepository,
-            ProjectMapper projectMapper, UserMapper userMapper) {
+            ProjectMapper projectMapper, UserMapper userMapper, ProjectAccessService projectAccess,
+            ActivityService activityService) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.projectMapper = projectMapper;
         this.userMapper = userMapper;
+        this.projectAccess = projectAccess;
+        this.activityService = activityService;
     }
 
     @Transactional(readOnly = true)
@@ -62,14 +63,14 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public ProjectResponse get(Long id, UserPrincipal principal) {
-        Project project = loadWithMembers(id);
-        requireCanView(project, principal);
+        Project project = projectAccess.loadWithMembers(id);
+        projectAccess.requireCanView(project, principal);
         return projectMapper.toResponse(project);
     }
 
     @Transactional
     public ProjectResponse create(CreateProjectRequest request, UserPrincipal principal) {
-        requireCanCreate(principal);
+        projectAccess.requireCanCreateProject(principal);
         User creator = loadUser(principal.id());
 
         Project project = new Project();
@@ -89,51 +90,61 @@ public class ProjectService {
                 project.getMembers().add(loadUser(memberId));
             }
         }
-        return projectMapper.toResponse(projectRepository.save(project));
+        Project saved = projectRepository.save(project);
+        activityService.record(ActivityType.PROJECT_CREATED,
+                "Created project \"" + saved.getName() + "\"", creator, saved, null);
+        return projectMapper.toResponse(saved);
     }
 
     @Transactional
     public ProjectResponse update(Long id, UpdateProjectRequest request, UserPrincipal principal) {
-        Project project = loadWithMembers(id);
-        requireCanManage(project, principal);
+        Project project = projectAccess.loadWithMembers(id);
+        projectAccess.requireCanManage(project, principal);
         project.setName(request.name().trim());
         project.setDescription(trimToNull(request.description()));
         project.setStatus(request.status());
         project.setStartDate(request.startDate());
         project.setDueDate(request.dueDate());
-        return projectMapper.toResponse(projectRepository.save(project));
+        Project saved = projectRepository.save(project);
+        activityService.record(ActivityType.PROJECT_UPDATED,
+                "Updated project \"" + saved.getName() + "\"", loadUser(principal.id()), saved, null);
+        return projectMapper.toResponse(saved);
     }
 
     @Transactional
     public void delete(Long id, UserPrincipal principal) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
-        requireCanDelete(project, principal);
+        projectAccess.requireCanDelete(project, principal);
         projectRepository.delete(project);
     }
 
     @Transactional(readOnly = true)
     public List<UserSummaryResponse> listMembers(Long projectId, UserPrincipal principal) {
-        Project project = loadWithMembers(projectId);
-        requireCanView(project, principal);
+        Project project = projectAccess.loadWithMembers(projectId);
+        projectAccess.requireCanView(project, principal);
         return project.getMembers().stream().map(userMapper::toSummary).toList();
     }
 
     @Transactional
     public ProjectResponse addMember(Long projectId, Long userId, UserPrincipal principal) {
-        Project project = loadWithMembers(projectId);
-        requireCanManage(project, principal);
-        if (isMember(project, userId)) {
+        Project project = projectAccess.loadWithMembers(projectId);
+        projectAccess.requireCanManage(project, principal);
+        if (projectAccess.isMember(project, userId)) {
             throw new DuplicateResourceException("User is already a member of this project");
         }
-        project.getMembers().add(loadUser(userId));
-        return projectMapper.toResponse(projectRepository.save(project));
+        User member = loadUser(userId);
+        project.getMembers().add(member);
+        Project saved = projectRepository.save(project);
+        activityService.record(ActivityType.MEMBER_ADDED,
+                "Added " + displayName(member) + " to the project", loadUser(principal.id()), saved, null);
+        return projectMapper.toResponse(saved);
     }
 
     @Transactional
     public void removeMember(Long projectId, Long userId, UserPrincipal principal) {
-        Project project = loadWithMembers(projectId);
-        requireCanManage(project, principal);
+        Project project = projectAccess.loadWithMembers(projectId);
+        projectAccess.requireCanManage(project, principal);
         if (project.getCreatedBy().getId().equals(userId)) {
             throw new UnauthorizedOperationException("The project owner cannot be removed from the project");
         }
@@ -141,12 +152,9 @@ public class ProjectService {
         if (!removed) {
             throw new ResourceNotFoundException("Project member", "userId", userId);
         }
-        projectRepository.save(project);
-    }
-
-    private Project loadWithMembers(Long id) {
-        return projectRepository.findWithMembersById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
+        Project saved = projectRepository.save(project);
+        activityService.record(ActivityType.MEMBER_REMOVED,
+                "Removed " + displayName(loadUser(userId)) + " from the project", loadUser(principal.id()), saved, null);
     }
 
     private User loadUser(Long id) {
@@ -154,40 +162,8 @@ public class ProjectService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
-    private void requireCanCreate(UserPrincipal principal) {
-        if (principal.role() != Role.ADMIN && principal.role() != Role.MANAGER) {
-            throw new UnauthorizedOperationException("Only admins and managers can create projects");
-        }
-    }
-
-    private void requireCanView(Project project, UserPrincipal principal) {
-        if (principal.role() == Role.ADMIN
-                || project.getCreatedBy().getId().equals(principal.id())
-                || isMember(project, principal.id())) {
-            return;
-        }
-        throw new UnauthorizedOperationException("You do not have access to this project");
-    }
-
-    private void requireCanManage(Project project, UserPrincipal principal) {
-        if (principal.role() == Role.ADMIN || project.getCreatedBy().getId().equals(principal.id())) {
-            return;
-        }
-        if (principal.role() == Role.MANAGER && isMember(project, principal.id())) {
-            return;
-        }
-        throw new UnauthorizedOperationException("You are not allowed to manage this project");
-    }
-
-    private void requireCanDelete(Project project, UserPrincipal principal) {
-        if (principal.role() == Role.ADMIN || project.getCreatedBy().getId().equals(principal.id())) {
-            return;
-        }
-        throw new UnauthorizedOperationException("Only the project owner or an admin can delete this project");
-    }
-
-    private boolean isMember(Project project, Long userId) {
-        return project.getMembers().stream().anyMatch(member -> member.getId().equals(userId));
+    private String displayName(User user) {
+        return user.getFirstName() + " " + user.getLastName();
     }
 
     private String trimToNull(String value) {

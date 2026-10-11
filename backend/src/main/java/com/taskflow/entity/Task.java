@@ -50,4 +50,8 @@ public class Task extends BaseEntity {
 
     @Column(name = "due_date")
     private LocalDate dueDate;
+
+    public boolean isOverdue() {
+        return dueDate != null && dueDate.isBefore(LocalDate.now()) && status != TaskStatus.DONE;
+    }
 }
