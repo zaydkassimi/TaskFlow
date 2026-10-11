@@ -195,15 +195,6 @@ export function CommentIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function FlagIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Svg {...props}>
-      <path d="M6 21V4" />
-      <path d="M6 4h12l-2.5 3.5L18 11H6" />
-    </Svg>
-  );
-}
-
 export function AlertIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Svg {...props}>
@@ -280,24 +271,6 @@ export function LockIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function LayersIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Svg {...props}>
-      <path d="m12 3 9 5-9 5-9-5 9-5Z" />
-      <path d="m3.5 12.5 8.5 4.7 8.5-4.7" />
-      <path d="m3.5 16.5 8.5 4.7 8.5-4.7" />
-    </Svg>
-  );
-}
-
-export function FilterIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Svg {...props}>
-      <path d="M3.5 5.5h17l-6.5 8v5l-4 2v-7l-6.5-8Z" />
-    </Svg>
-  );
-}
-
 export function ListIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Svg {...props}>
@@ -316,24 +289,6 @@ export function GridIcon(props: SVGProps<SVGSVGElement>) {
       <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
       <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
       <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
-    </Svg>
-  );
-}
-
-export function ColumnsIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Svg {...props}>
-      <rect x="3.5" y="4.5" width="5" height="15" rx="1.5" />
-      <rect x="9.5" y="4.5" width="5" height="15" rx="1.5" />
-      <rect x="15.5" y="4.5" width="5" height="15" rx="1.5" />
-    </Svg>
-  );
-}
-
-export function CommandIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Svg {...props}>
-      <path d="M9 6a3 3 0 1 0-3 3h3V6Zm0 0h6M9 6v12m0-12a3 3 0 1 1 3 3M9 18a3 3 0 1 1-3-3h3v3Zm0 0h6m0-12a3 3 0 1 0 3 3h-3V6Zm0 12a3 3 0 1 1 3-3h-3v3Zm0 0V6" />
     </Svg>
   );
 }
@@ -376,15 +331,6 @@ export function CheckIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <Svg {...props}>
       <path d="m5 12.5 4.5 4.5L19 7" />
-    </Svg>
-  );
-}
-
-export function TagIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Svg {...props}>
-      <path d="M3.5 11.2V4.5a1 1 0 0 1 1-1h6.7a1 1 0 0 1 .7.3l8 8a1 1 0 0 1 0 1.4l-6.7 6.7a1 1 0 0 1-1.4 0l-8-8a1 1 0 0 1-.3-.7Z" />
-      <circle cx="8" cy="8" r="1.4" />
     </Svg>
   );
 }

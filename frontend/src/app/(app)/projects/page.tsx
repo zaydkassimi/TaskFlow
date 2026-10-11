@@ -36,8 +36,6 @@ import { PROJECT_STATUS_DOT } from "@/lib/status";
 
 const PAGE_SIZE = 12;
 
-
-
 function CreateProjectModal({
   onClose,
   onCreated,

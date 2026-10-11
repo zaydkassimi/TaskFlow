@@ -16,10 +16,3 @@ export function fieldErrors(error: unknown): Record<string, string> {
   }
   return {};
 }
-
-export function firstFieldError(
-  error: unknown,
-  field: string,
-): string | undefined {
-  return fieldErrors(error)[field];
-}

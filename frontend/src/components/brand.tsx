@@ -13,16 +13,3 @@ export function BrandMark({ className }: { className?: string }) {
     />
   );
 }
-
-export function BrandWordmark({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(
-        "text-[15px] font-semibold tracking-tight text-foreground",
-        className,
-      )}
-    >
-      TaskFlow
-    </span>
-  );
-}

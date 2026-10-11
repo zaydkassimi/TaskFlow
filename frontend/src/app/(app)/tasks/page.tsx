@@ -9,6 +9,7 @@ import { TASK_STATUSES } from "@/lib/api/types";
 import type { TaskPriority, TaskStatus, TaskSummary } from "@/lib/api/types";
 import { formatDate, isOverdue, titleCase } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { TASK_STATUS_DOT } from "@/lib/status";
 import { TaskDetailModal } from "@/components/tasks/task-detail-modal";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +23,6 @@ import {
   FolderIcon,
   InboxIcon,
 } from "@/components/icons";
-
-const STATUS_DOT: Record<TaskStatus, string> = {
-  TODO: "bg-muted-foreground",
-  IN_PROGRESS: "bg-primary-strong",
-  IN_REVIEW: "bg-warning",
-  DONE: "bg-success",
-};
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
   TODO: "Todo",
@@ -162,7 +156,7 @@ export default function MyTasksPage() {
                 <div className="flex items-center justify-between gap-2 px-0.5">
                   <div className="flex items-center gap-2">
                     <span
-                      className={cn("h-2 w-2 rounded-full", STATUS_DOT[status])}
+                      className={cn("h-2 w-2 rounded-full", TASK_STATUS_DOT[status])}
                       aria-hidden="true"
                     />
                     <span className="text-[13px] font-semibold tracking-tight text-foreground">
