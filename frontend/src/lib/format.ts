@@ -60,6 +60,11 @@ export function formatRelative(value: string | null | undefined): string {
   }
   const then = new Date(value).getTime();
   const seconds = Math.round((Date.now() - then) / 1000);
+
+  if (Math.abs(seconds) <= 10) {
+    return "just now";
+  }
+
   const divisions: Array<[number, Intl.RelativeTimeFormatUnit]> = [
     [60, "second"],
     [60, "minute"],
@@ -69,8 +74,8 @@ export function formatRelative(value: string | null | undefined): string {
     [12, "month"],
     [Number.POSITIVE_INFINITY, "year"],
   ];
-  const formatter = new Intl.RelativeTimeFormat(undefined, {
-    numeric: "auto",
+  const formatter = new Intl.RelativeTimeFormat("en", {
+    numeric: "always",
   });
   let duration = seconds;
   for (const [amount, unit] of divisions) {
