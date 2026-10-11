@@ -6,7 +6,13 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { errorMessage } from "@/lib/api/errors";
 import { RedirectIfAuthenticated } from "@/components/auth/guards";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
@@ -40,7 +46,7 @@ function RegisterForm() {
   }
 
   return (
-    <Card>
+    <Card className="shadow-md">
       <CardHeader>
         <CardTitle>Create your account</CardTitle>
         <CardDescription>
@@ -112,7 +118,7 @@ function RegisterForm() {
               required
             />
           </Field>
-          <Button type="submit" disabled={busy} className="mt-1">
+          <Button type="submit" disabled={busy} className="mt-1 w-full">
             {busy ? <Spinner className="h-4 w-4" /> : null}
             Create account
           </Button>
@@ -120,7 +126,7 @@ function RegisterForm() {
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-medium text-primary hover:underline"
+              className="font-medium text-primary-strong hover:underline"
             >
               Sign in
             </Link>

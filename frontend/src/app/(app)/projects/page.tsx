@@ -1,19 +1,17 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useApi } from "@/lib/hooks/use-api";
 import { projectsApi } from "@/lib/api/projects";
 import { errorMessage } from "@/lib/api/errors";
 import { PROJECT_STATUSES } from "@/lib/api/types";
 import type { CreateProjectRequest, ProjectStatus } from "@/lib/api/types";
-import { formatDate, titleCase } from "@/lib/format";
-import { PROJECT_STATUS_TONE } from "@/lib/status";
+import { titleCase } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { MemberPicker } from "@/components/projects/member-picker";
-import { Badge } from "@/components/ui/badge";
+import { ProjectCard } from "@/components/projects/project-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -25,13 +23,8 @@ import { ErrorState } from "@/components/ui/error-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSpinner } from "@/components/ui/spinner";
 import { Pagination } from "@/components/ui/pagination";
-import {
-  CalendarIcon,
-  ClockIcon,
-  FolderIcon,
-  PlusIcon,
-  SearchIcon,
-} from "@/components/icons";
+import { SearchInput } from "@/components/ui/search-input";
+import { CheckSquareIcon, PlusIcon } from "@/components/icons";
 
 const PAGE_SIZE = 12;
 
@@ -203,7 +196,7 @@ function ProjectsManager() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <form
           className="flex flex-1 gap-2"
           onSubmit={(e) => {
@@ -211,34 +204,38 @@ function ProjectsManager() {
             applyFilters();
           }}
         >
-          <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder="Search projects…"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-          </div>
+          <SearchInput
+            placeholder="Search projects…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
           <Button type="submit" variant="secondary">
             Search
           </Button>
         </form>
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <div className="flex items-center gap-2">
+          <label
+            className={cn(
+              "flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors select-none",
+              mine
+                ? "border-primary/30 bg-primary/10 text-primary-strong"
+                : "border-border bg-background/40 text-muted-foreground hover:text-foreground",
+            )}
+          >
             <input
               type="checkbox"
+              className="sr-only"
               checked={mine}
               onChange={(e) => {
                 setMine(e.target.checked);
                 setPage(0);
               }}
-              className="h-4 w-4 rounded border-input accent-primary"
             />
+            <CheckSquareIcon className="h-4 w-4" />
             My projects
           </label>
           <Select
-            className="sm:w-44"
+            className="w-40"
             value={status}
             onChange={(e) => {
               setStatus(e.target.value as ProjectStatus | "");
@@ -275,39 +272,9 @@ function ProjectsManager() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {data?.content.map((project) => (
-            <Link
-              key={project.id}
-              href={`/projects/${project.id}`}
-              className="group"
-            >
-              <Card className="h-full transition-colors hover:border-ring hover:shadow-md">
-                <CardHeader className="flex-row items-start justify-between gap-2">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <FolderIcon className="h-5 w-5" />
-                  </span>
-                  <Badge tone={PROJECT_STATUS_TONE[project.status]}>
-                    {titleCase(project.status)}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3">
-                  <CardTitle className="group-hover:text-primary">
-                    {project.name}
-                  </CardTitle>
-                  <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <CalendarIcon className="h-4 w-4" />
-                      Created {formatDate(project.createdAt)}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <ClockIcon className="h-4 w-4" />
-                      Due {formatDate(project.dueDate)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+            <ProjectCard key={project.id} project={project} />
           ))}
         </div>
       )}

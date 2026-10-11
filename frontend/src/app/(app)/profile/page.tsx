@@ -5,13 +5,26 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { usersApi } from "@/lib/api/users";
 import { errorMessage } from "@/lib/api/errors";
 import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { PageHeader } from "@/components/ui/page-header";
 import { fullName } from "@/lib/format";
+
+const ROLE_TONE = {
+  ADMIN: "primary",
+  MANAGER: "success",
+  MEMBER: "neutral",
+} as const;
 
 export default function ProfilePage() {
   const { user, refresh } = useAuth();
@@ -75,19 +88,26 @@ export default function ProfilePage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="Profile" description="Manage your personal information." />
 
-      <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-5">
         <Avatar user={user} size="lg" />
-        <div>
-          <p className="text-lg font-semibold text-foreground">
+        <div className="min-w-0">
+          <p className="text-lg font-semibold tracking-tight text-foreground">
             {fullName(user)}
           </p>
-          <p className="text-sm capitalize text-muted-foreground">
-            {user?.role.toLowerCase() ?? "—"}
-          </p>
+          <div className="mt-1 flex items-center gap-2">
+            {user?.role ? (
+              <Badge tone={ROLE_TONE[user.role]}>
+                {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
+              </Badge>
+            ) : null}
+            <span className="truncate text-sm text-muted-foreground">
+              {user?.email}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid max-w-3xl grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
         <Card>
           <CardHeader>
             <CardTitle>Personal information</CardTitle>
@@ -137,7 +157,8 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle>Change password</CardTitle>
             <CardDescription>
-              Use at least 8 characters with a mix of letters, numbers and symbols.
+              Use at least 8 characters with a mix of letters, numbers and
+              symbols.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -167,7 +188,11 @@ export default function ProfilePage() {
                   required
                 />
               </Field>
-              <Field label="Confirm new password" htmlFor="confirmPassword" required>
+              <Field
+                label="Confirm new password"
+                htmlFor="confirmPassword"
+                required
+              >
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -178,7 +203,11 @@ export default function ProfilePage() {
                   required
                 />
               </Field>
-              <Button type="submit" disabled={savingPassword} className="self-start">
+              <Button
+                type="submit"
+                disabled={savingPassword}
+                className="self-start"
+              >
                 {savingPassword ? "Updating…" : "Update password"}
               </Button>
             </form>

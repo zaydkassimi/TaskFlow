@@ -30,7 +30,7 @@ export function MemberPicker({
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+      <div className="flex flex-col gap-2 rounded-md border border-border bg-background/30 p-2">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-9 w-full" />
         ))}
@@ -47,7 +47,7 @@ export function MemberPicker({
   }
 
   return (
-    <div className="flex max-h-56 flex-col gap-1 overflow-y-auto rounded-md border border-border p-2">
+    <div className="flex max-h-56 flex-col gap-0.5 overflow-y-auto rounded-md border border-border bg-background/30 p-1.5">
       {data.map((member) => {
         const excluded = excludeIds.includes(member.id);
         const selected = selectedIds.includes(member.id);
@@ -55,10 +55,8 @@ export function MemberPicker({
           <label
             key={member.id}
             className={
-              "flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 transition-colors " +
-              (excluded
-                ? "cursor-not-allowed opacity-50"
-                : "hover:bg-muted")
+              "flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-colors " +
+              (excluded ? "cursor-not-allowed opacity-50" : "hover:bg-muted")
             }
           >
             <input

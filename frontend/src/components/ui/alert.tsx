@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 type Tone = "info" | "success" | "warning" | "danger";
 
 const TONES: Record<Tone, string> = {
-  info: "border-primary/20 bg-primary/5 text-foreground",
-  success: "border-success/20 bg-success/5 text-foreground",
-  warning: "border-warning/20 bg-warning/5 text-foreground",
-  danger: "border-destructive/20 bg-destructive/5 text-foreground",
+  info: "border-primary/25 bg-primary/10",
+  success: "border-success/25 bg-success/10",
+  warning: "border-warning/25 bg-warning/10",
+  danger: "border-destructive/25 bg-destructive/10",
 };
 
 export interface AlertProps extends React.ComponentProps<"div"> {
@@ -25,14 +25,14 @@ export function Alert({
     <div
       role="alert"
       className={cn(
-        "rounded-md border border-border px-4 py-3 text-sm",
+        "rounded-md border px-3.5 py-2.5 text-sm text-foreground",
         TONES[tone],
         className,
       )}
       {...props}
     >
       {title ? (
-        <p className="mb-1 font-medium text-foreground">{title}</p>
+        <p className="mb-0.5 font-medium text-foreground">{title}</p>
       ) : null}
       {children}
     </div>

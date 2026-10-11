@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { CloseIcon } from "@/components/icons";
 
 interface ModalProps {
   open: boolean;
@@ -11,12 +13,13 @@ interface ModalProps {
   children?: React.ReactNode;
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg";
+  hideClose?: boolean;
 }
 
 const SIZES = {
   sm: "max-w-sm",
   md: "max-w-lg",
-  lg: "max-w-2xl",
+  lg: "max-w-3xl",
 };
 
 export function Modal({
@@ -27,6 +30,7 @@ export function Modal({
   children,
   footer,
   size = "md",
+  hideClose = false,
 }: ModalProps) {
   useEffect(() => {
     if (!open) {
@@ -57,29 +61,58 @@ export function Modal({
       aria-modal="true"
     >
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
         className={cn(
-          "relative z-10 w-full rounded-lg border border-border bg-card p-6 shadow-xl",
+          "relative z-10 flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-xl border border-border bg-popover shadow-lg",
           SIZES[size],
         )}
       >
-        <div className="flex flex-col gap-1 pr-8">
-          {title ? (
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">
-              {title}
-            </h2>
-          ) : null}
-          {description ? (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          ) : null}
-        </div>
-        <div className="mt-4">{children}</div>
+        {title ? (
+          <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <h2 className="text-[15px] font-semibold tracking-tight text-foreground">
+                {title}
+              </h2>
+              {description ? (
+                <p className="text-[13px] text-muted-foreground">
+                  {description}
+                </p>
+              ) : null}
+            </div>
+            {!hideClose ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                aria-label="Close dialog"
+                className="-mr-1 -mt-1 shrink-0"
+              >
+                <CloseIcon className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </div>
+        ) : (
+          !hideClose && (
+            <div className="flex justify-end px-5 pt-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                aria-label="Close dialog"
+                className="-mr-1"
+              >
+                <CloseIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          )
+        )}
+        <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
         {footer ? (
-          <div className="mt-6 flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-2 border-t border-border bg-card/50 px-5 py-3.5">
             {footer}
           </div>
         ) : null}

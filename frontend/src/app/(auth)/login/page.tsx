@@ -6,7 +6,13 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { errorMessage } from "@/lib/api/errors";
 import { RedirectIfAuthenticated } from "@/components/auth/guards";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
@@ -33,7 +39,7 @@ function LoginForm() {
   }
 
   return (
-    <Card>
+    <Card className="shadow-md">
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>Welcome back — sign in to continue.</CardDescription>
@@ -63,7 +69,7 @@ function LoginForm() {
               required
             />
           </Field>
-          <Button type="submit" disabled={busy} className="mt-1">
+          <Button type="submit" disabled={busy} className="mt-1 w-full">
             {busy ? <Spinner className="h-4 w-4" /> : null}
             Sign in
           </Button>
@@ -71,7 +77,7 @@ function LoginForm() {
             No account yet?{" "}
             <Link
               href="/register"
-              className="font-medium text-primary hover:underline"
+              className="font-medium text-primary-strong hover:underline"
             >
               Create one
             </Link>

@@ -19,18 +19,18 @@ export function Pagination({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3">
-      <p className="text-sm text-muted-foreground">
+    <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+      <p className="text-xs text-muted-foreground">
         Page {page + 1} of {totalPages}
       </p>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Button
           variant="outline"
           size="sm"
           disabled={disabled || page <= 0}
           onClick={() => onPageChange(page - 1)}
         >
-          <ChevronLeftIcon className="h-4 w-4" />
+          <ChevronLeftIcon className="h-3.5 w-3.5" />
           Previous
         </Button>
         <Button
@@ -40,7 +40,7 @@ export function Pagination({
           onClick={() => onPageChange(page + 1)}
         >
           Next
-          <ChevronRightIcon className="h-4 w-4" />
+          <ChevronRightIcon className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

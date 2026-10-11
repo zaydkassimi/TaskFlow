@@ -13,6 +13,7 @@ import { PROJECT_STATUSES, TASK_STATUSES } from "@/lib/api/types";
 import type {
   Project,
   ProjectStatus,
+  TaskPriority,
   TaskSummary,
   UpdateProjectRequest,
 } from "@/lib/api/types";
@@ -25,13 +26,21 @@ import {
   toDateInputValue,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { PROJECT_STATUS_TONE, TASK_STATUS_TONE, TASK_PRIORITY_TONE } from "@/lib/status";
+import {
+  PROJECT_STATUS_TONE,
+  TASK_STATUS_TONE,
+} from "@/lib/status";
 import { TaskFormModal } from "@/components/tasks/task-form-modal";
 import { TaskDetailModal } from "@/components/tasks/task-detail-modal";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -44,6 +53,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSpinner } from "@/components/ui/spinner";
 import { Pagination } from "@/components/ui/pagination";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   CalendarIcon,
   CheckCircleIcon,
@@ -57,6 +67,20 @@ import {
 
 const TASK_PAGE_SIZE = 20;
 const ACTIVITY_PAGE_SIZE = 10;
+
+const PRIORITY_BAR: Record<TaskPriority, string> = {
+  LOW: "bg-muted-foreground/40",
+  MEDIUM: "bg-primary",
+  HIGH: "bg-warning",
+  URGENT: "bg-destructive",
+};
+
+const PRIORITY_TEXT: Record<TaskPriority, string> = {
+  LOW: "text-muted-foreground",
+  MEDIUM: "text-primary-strong",
+  HIGH: "text-warning",
+  URGENT: "text-destructive",
+};
 
 function EditProjectModal({
   project,
@@ -229,10 +253,7 @@ function AddMemberControl({
             <option value="">Everyone is already a member</option>
           ) : (
             available.map((member) => (
-              <option
-                key={member.id}
-                value={String(member.id)}
-              >
+              <option key={member.id} value={String(member.id)}>
                 {fullName(member)} ({member.email})
               </option>
             ))
@@ -248,6 +269,23 @@ function AddMemberControl({
         </Button>
       </div>
     </div>
+  );
+}
+
+function MetaItem({
+  icon,
+  children,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+      <span className="text-muted-foreground/70" aria-hidden="true">
+        {icon}
+      </span>
+      {children}
+    </span>
   );
 }
 
@@ -359,70 +397,65 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
   const isAdmin = user?.role === "ADMIN";
   const isOwner = project.createdBy?.id === user?.id;
   const isMember = project.members.some((member) => member.id === user?.id);
-  const canManage =
-    isAdmin || isOwner || (user?.role === "MANAGER" && isMember);
+  const canManage = isAdmin || isOwner || (user?.role === "MANAGER" && isMember);
   const canDelete = isAdmin || isOwner;
+  const activityItems = activity?.content ?? [];
 
   return (
     <div className="flex flex-col gap-6">
       {actionError ? <Alert tone="danger">{actionError}</Alert> : null}
 
-      <PageHeader
-        title={project.name}
-        description={project.description ?? undefined}
-        action={
-          <div className="flex items-center gap-2">
-            {canManage ? (
-              <Button
-                variant="outline"
-                onClick={() => setEditOpen(true)}
-              >
-                <PencilIcon className="h-4 w-4" />
-                Edit
-              </Button>
-            ) : null}
-            {canDelete ? (
-              <Button
-                variant="outline"
-                onClick={() => setDeleteOpen(true)}
-                className="text-destructive hover:bg-destructive/10"
-              >
-                <TrashIcon className="h-4 w-4" />
-                Delete
-              </Button>
-            ) : null}
-          </div>
-        }
-      />
-
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge tone={PROJECT_STATUS_TONE[project.status]}>
-            {titleCase(project.status)}
-          </Badge>
-          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <UserIcon className="h-4 w-4" />
+        <PageHeader
+          title={project.name}
+          description={project.description ?? undefined}
+          action={
+            <div className="flex items-center gap-2">
+              {canManage ? (
+                <Button variant="outline" onClick={() => setEditOpen(true)}>
+                  <PencilIcon className="h-4 w-4" />
+                  Edit
+                </Button>
+              ) : null}
+              {canDelete ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteOpen(true)}
+                  className="text-destructive hover:border-destructive/40 hover:bg-destructive/10"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  Delete
+                </Button>
+              ) : null}
+            </div>
+          }
+        />
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <StatusBadge
+            status={project.status}
+            tone={PROJECT_STATUS_TONE[project.status]}
+          />
+          <MetaItem icon={<UserIcon className="h-3.5 w-3.5" />}>
             Owned by{" "}
             <span className="font-medium text-foreground">
               {project.createdBy ? fullName(project.createdBy) : "—"}
             </span>
-          </span>
-          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <CalendarIcon className="h-4 w-4" />
+          </MetaItem>
+          <MetaItem icon={<CalendarIcon className="h-3.5 w-3.5" />}>
             {formatDate(project.startDate)} → {formatDate(project.dueDate)}
-          </span>
-          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <UsersIcon className="h-4 w-4" />
+          </MetaItem>
+          <MetaItem icon={<UsersIcon className="h-3.5 w-3.5" />}>
             {project.memberCount} member
             {project.memberCount === 1 ? "" : "s"}
-          </span>
+          </MetaItem>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-6 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
+        <div className="flex flex-col gap-6">
           <Card>
-            <CardHeader className="flex-row items-center justify-between gap-2">
+            <CardHeader className="flex flex-wrap flex-row items-center justify-between gap-3">
               <CardTitle>Tasks</CardTitle>
               <div className="flex items-center gap-2">
                 <Select
@@ -458,45 +491,61 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
                 />
               ) : (
                 <div className="flex flex-col gap-2">
-                  {tasks?.content.map((task) => (
-                    <button
-                      key={task.id}
-                      type="button"
-                      onClick={() => setSelectedTaskId(task.id)}
-                      className="flex flex-col gap-2 rounded-md border border-border bg-card p-3 text-left transition-colors hover:border-ring hover:bg-muted/40"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium text-foreground">
-                          {task.title}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Badge tone={TASK_PRIORITY_TONE[task.priority]}>
-                            {titleCase(task.priority)}
-                          </Badge>
-                          <Badge tone={TASK_STATUS_TONE[task.status]}>
-                            {titleCase(task.status)}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                          <Avatar user={task.assignedTo} size="sm" />
-                          {task.assignedTo ? fullName(task.assignedTo) : "Unassigned"}
-                        </span>
+                  {tasks?.content.map((task) => {
+                    const overdue = isOverdue(task.dueDate, task.status);
+                    return (
+                      <button
+                        key={task.id}
+                        type="button"
+                        onClick={() => setSelectedTaskId(task.id)}
+                        className="group flex items-stretch gap-3 rounded-md border border-border bg-background/30 px-3 py-2.5 text-left transition-colors hover:border-ring/60 hover:bg-muted/40"
+                      >
                         <span
                           className={cn(
-                            "flex items-center gap-1.5",
-                            isOverdue(task.dueDate, task.status)
-                              ? "font-medium text-destructive"
-                              : "",
+                            "w-1 shrink-0 rounded-full",
+                            PRIORITY_BAR[task.priority],
                           )}
-                        >
-                          <ClockIcon className="h-3.5 w-3.5" />
-                          Due {formatDate(task.dueDate)}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                          aria-hidden="true"
+                        />
+                        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate text-sm font-medium text-foreground">
+                              {task.title}
+                            </span>
+                            <StatusBadge
+                              status={task.status}
+                              tone={TASK_STATUS_TONE[task.status]}
+                            />
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                              <Avatar user={task.assignedTo} size="sm" />
+                              {task.assignedTo
+                                ? fullName(task.assignedTo)
+                                : "Unassigned"}
+                            </span>
+                            <span
+                              className={cn(
+                                "flex items-center gap-1.5",
+                                overdue ? "font-medium text-destructive" : "",
+                              )}
+                            >
+                              <ClockIcon className="h-3.5 w-3.5" />
+                              Due {formatDate(task.dueDate)}
+                            </span>
+                            <span
+                              className={cn(
+                                "font-medium",
+                                PRIORITY_TEXT[task.priority],
+                              )}
+                            >
+                              {titleCase(task.priority)}
+                            </span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
               {tasks && tasks.totalPages > 1 ? (
@@ -513,8 +562,11 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
           <Card>
             <CardHeader>
               <CardTitle>Activity</CardTitle>
+              <CardDescription>
+                Recent updates across this project.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-1">
+            <CardContent className="pt-2">
               {activityError ? (
                 <ErrorState
                   message={activityError.message}
@@ -522,60 +574,68 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
                 />
               ) : activityLoading && !activity ? (
                 <PageSpinner label="Loading activity…" />
-              ) : activity && activity.content.length === 0 ? (
+              ) : activityItems.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No activity yet on this project.
                 </p>
               ) : (
                 <ul className="flex flex-col">
-                  {activity?.content.map((entry) => (
-                    <li
-                      key={entry.id}
-                      className="flex items-start gap-3 border-b border-border py-3 last:border-0"
-                    >
-                      <Avatar user={entry.user} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm text-foreground">
-                          <span className="font-medium">
-                            {entry.user ? fullName(entry.user) : "System"}
-                          </span>{" "}
-                          <span className="text-muted-foreground">
-                            {entry.description}
-                          </span>
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {formatRelative(entry.createdAt)}
-                      </span>
-                    </li>
-                  ))}
+                  {activityItems.map((entry, index) => {
+                    const last = index === activityItems.length - 1;
+                    return (
+                      <li key={entry.id} className="relative flex gap-3 pb-4 last:pb-0">
+                        {!last ? (
+                          <span
+                            className="absolute left-[13px] top-8 bottom-0 w-px bg-border"
+                            aria-hidden="true"
+                          />
+                        ) : null}
+                        <Avatar user={entry.user} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm leading-5 text-foreground">
+                            <span className="font-medium">
+                              {entry.user ? fullName(entry.user) : "System"}
+                            </span>{" "}
+                            <span className="text-muted-foreground">
+                              {entry.description}
+                            </span>
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {formatRelative(entry.createdAt)}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
               {activity && activity.totalPages > 1 ? (
-                <Pagination
-                  page={activity.page}
-                  totalPages={activity.totalPages}
-                  onPageChange={setActivityPage}
-                  disabled={activityLoading}
-                />
+                <div className="mt-3">
+                  <Pagination
+                    page={activity.page}
+                    totalPages={activity.totalPages}
+                    onPageChange={setActivityPage}
+                    disabled={activityLoading}
+                  />
+                </div>
               ) : null}
             </CardContent>
           </Card>
         </div>
 
-        <Card className="h-fit">
+        <Card className="h-fit xl:sticky xl:top-6">
           <CardHeader className="flex-row items-center justify-between gap-2">
             <CardTitle>Members</CardTitle>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-[13px] text-muted-foreground">
               {project.memberCount}
             </span>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-1">
               {project.members.map((member) => (
                 <li
                   key={member.id}
-                  className="flex items-center gap-3 rounded-md border border-border p-2"
+                  className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/50"
                 >
                   <Avatar user={member} size="sm" />
                   <div className="min-w-0 flex-1">
@@ -594,24 +654,26 @@ export function ProjectDetailClient({ projectId }: { projectId: number }) {
                       size="icon"
                       disabled={busy}
                       onClick={() => handleRemoveMember(member.id)}
-                      className="text-destructive hover:bg-destructive/10"
+                      className="h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                       aria-label={`Remove ${fullName(member)}`}
                     >
-                      <TrashIcon className="h-4 w-4" />
+                      <TrashIcon className="h-3.5 w-3.5" />
                     </Button>
                   ) : null}
                 </li>
               ))}
             </ul>
             {canManage ? (
-              <AddMemberControl
-                projectId={project.id}
-                currentMemberIds={project.members.map((member) => member.id)}
-                onAdded={refreshAll}
-              />
+              <div className="border-t border-border pt-3">
+                <AddMemberControl
+                  projectId={project.id}
+                  currentMemberIds={project.members.map((member) => member.id)}
+                  onAdded={refreshAll}
+                />
+              </div>
             ) : (
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircleIcon className="h-4 w-4" />
+              <p className="flex items-center gap-2 border-t border-border pt-3 text-sm text-muted-foreground">
+                <CheckCircleIcon className="h-4 w-4 text-success" />
                 You are a member of this project
               </p>
             )}

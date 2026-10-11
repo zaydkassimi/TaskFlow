@@ -5,10 +5,7 @@ import { tasksApi } from "@/lib/api/tasks";
 import { commentsApi } from "@/lib/api/comments";
 import { useApi } from "@/lib/hooks/use-api";
 import { errorMessage } from "@/lib/api/errors";
-import {
-  TASK_PRIORITIES,
-  TASK_STATUSES,
-} from "@/lib/api/types";
+import { TASK_PRIORITIES, TASK_STATUSES } from "@/lib/api/types";
 import type {
   Task,
   TaskPriority,
@@ -37,7 +34,8 @@ import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/ui/error-state";
 import { PageSpinner } from "@/components/ui/spinner";
-import { AlertIcon, CommentIcon, TrashIcon } from "@/components/icons";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { AlertIcon, CommentIcon, PencilIcon, TrashIcon } from "@/components/icons";
 
 interface TaskDetailModalProps {
   taskId: number;
@@ -62,17 +60,7 @@ export function TaskDetailModal({
   const { data: task, loading, error, reload } = useApi(taskFetcher);
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      size="lg"
-      title="Task details"
-      footer={
-        <Button variant="ghost" onClick={onClose}>
-          Close
-        </Button>
-      }
-    >
+    <Modal open onClose={onClose} size="lg" title="Task details">
       {loading ? (
         <PageSpinner label="Loading task…" />
       ) : error ? (
@@ -93,6 +81,23 @@ export function TaskDetailModal({
   );
 }
 
+function Meta({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-col gap-0.5", className)}>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="text-sm text-foreground">{children}</dd>
+    </div>
+  );
+}
+
 function TaskDetailContent({
   task,
   members,
@@ -110,8 +115,7 @@ function TaskDetailContent({
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const canModify =
-    canManageProject || task.createdBy?.id === currentUserId;
+  const canModify = canManageProject || task.createdBy?.id === currentUserId;
   const canChangeStatus = canModify || task.assignedTo?.id === currentUserId;
 
   const [status, setStatus] = useState<TaskStatus>(task.status);
@@ -234,53 +238,45 @@ function TaskDetailContent({
       {error ? <Alert tone="danger">{error}</Alert> : null}
 
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-base font-semibold text-foreground">{task.title}</h3>
-          <Badge
-            tone={TASK_STATUS_TONE[status]}
-            className="uppercase"
-          >
-            {titleCase(status)}
-          </Badge>
-          <Badge tone={TASK_PRIORITY_TONE[task.priority]}>
-            {titleCase(task.priority)} priority
-          </Badge>
-          {task.overdue ? (
-            <Badge tone="danger">
-              <AlertIcon className="h-3 w-3" />
-              Overdue
-            </Badge>
-          ) : null}
-        </div>
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-          <div className="flex items-center justify-between gap-2">
-            <dt className="text-muted-foreground">Project</dt>
-            <dd className="text-foreground">{task.projectName}</dd>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h3 className="text-base font-semibold leading-6 text-foreground">
+            {task.title}
+          </h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={status} tone={TASK_STATUS_TONE[status]} />
+            <StatusBadge
+              status={task.priority}
+              tone={TASK_PRIORITY_TONE[task.priority]}
+              label={`${titleCase(task.priority)} priority`}
+            />
+            {task.overdue ? (
+              <Badge tone="danger">
+                <AlertIcon className="h-3 w-3" />
+                Overdue
+              </Badge>
+            ) : null}
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <dt className="text-muted-foreground">Due date</dt>
-            <dd
+        </div>
+
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-md border border-border bg-background/30 p-4">
+          <Meta label="Project">{task.projectName}</Meta>
+          <Meta label="Due date">
+            <span
               className={cn(
-                isOverdue(task.dueDate, status)
-                  ? "font-medium text-destructive"
-                  : "text-foreground",
+                isOverdue(task.dueDate, status) && "font-medium text-destructive",
               )}
             >
               {formatDate(task.dueDate)}
-            </dd>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <dt className="text-muted-foreground">Created by</dt>
-            <dd className="text-foreground">
-              {task.createdBy ? fullName(task.createdBy) : "—"}
-            </dd>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <dt className="text-muted-foreground">Created</dt>
-            <dd className="text-muted-foreground">
+            </span>
+          </Meta>
+          <Meta label="Created by">
+            {task.createdBy ? fullName(task.createdBy) : "—"}
+          </Meta>
+          <Meta label="Created">
+            <span className="text-muted-foreground">
               {formatRelative(task.createdAt)}
-            </dd>
-          </div>
+            </span>
+          </Meta>
         </dl>
 
         {canChangeStatus || canAssign ? (
@@ -290,7 +286,9 @@ function TaskDetailContent({
                 <Select
                   value={status}
                   disabled={busy}
-                  onChange={(e) => handleSaveStatus(e.target.value as TaskStatus)}
+                  onChange={(e) =>
+                    handleSaveStatus(e.target.value as TaskStatus)
+                  }
                 >
                   {TASK_STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -321,7 +319,11 @@ function TaskDetailContent({
       </div>
 
       {editing ? (
-        <form id="task-detail-form" onSubmit={handleSaveDetails} className="flex flex-col gap-4">
+        <form
+          id="task-detail-form"
+          onSubmit={handleSaveDetails}
+          className="flex flex-col gap-4 border-t border-border pt-5"
+        >
           <Field label="Title" htmlFor="detail-title" required>
             <Input
               id="detail-title"
@@ -374,46 +376,63 @@ function TaskDetailContent({
             </Button>
           </div>
         </form>
-      ) : task.description ? (
-        <p className="whitespace-pre-wrap text-sm text-foreground">
-          {task.description}
-        </p>
-      ) : null}
-
-      {canModify ? (
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            Edit details
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDeleteOpen(true)}
-            className="text-destructive hover:bg-destructive/10"
-          >
-            <TrashIcon className="h-4 w-4" />
-            Delete task
-          </Button>
-        </div>
-      ) : null}
-
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <CommentIcon className="h-4 w-4" />
-          Comments ({comments?.length ?? 0})
-        </div>
+      ) : (
         <div className="flex flex-col gap-3">
+          {task.description ? (
+            <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">
+              {task.description}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No description provided.
+            </p>
+          )}
+          {canModify ? (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditing(true)}
+              >
+                <PencilIcon className="h-3.5 w-3.5" />
+                Edit details
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDeleteOpen(true)}
+                className="text-destructive hover:bg-destructive/10"
+              >
+                <TrashIcon className="h-3.5 w-3.5" />
+                Delete task
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3 border-t border-border pt-5">
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <CommentIcon className="h-4 w-4 text-muted-foreground" />
+          Comments
+          <span className="text-muted-foreground">
+            ({comments?.length ?? 0})
+          </span>
+        </div>
+        <div className="flex flex-col gap-2">
           {comments && comments.length > 0 ? (
             comments.map((commentItem) => (
               <div
                 key={commentItem.id}
-                className="flex items-start gap-3 rounded-md border border-border bg-card p-3"
+                className="group flex items-start gap-3 rounded-md border border-border bg-background/30 p-3"
               >
                 <Avatar user={commentItem.author} size="sm" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
                     <p className="text-sm font-medium text-foreground">
-                      {commentItem.author ? fullName(commentItem.author) : "Unknown"}
+                      {commentItem.author
+                        ? fullName(commentItem.author)
+                        : "Unknown"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {formatRelative(commentItem.createdAt)}
@@ -423,16 +442,17 @@ function TaskDetailContent({
                     {commentItem.content}
                   </p>
                 </div>
-                {currentUserId === commentItem.author?.id || canManageProject ? (
+                {currentUserId === commentItem.author?.id ||
+                canManageProject ? (
                   <Button
                     variant="ghost"
                     size="icon"
                     disabled={busy}
                     onClick={() => handleDeleteComment(commentItem.id)}
-                    className="text-destructive hover:bg-destructive/10"
+                    className="h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                     aria-label="Delete comment"
                   >
-                    <TrashIcon className="h-4 w-4" />
+                    <TrashIcon className="h-3.5 w-3.5" />
                   </Button>
                 ) : null}
               </div>
@@ -452,7 +472,7 @@ function TaskDetailContent({
           />
           <div className="flex justify-end">
             <Button type="submit" size="sm" disabled={busy || !comment.trim()}>
-              Add comment
+              Comment
             </Button>
           </div>
         </form>
