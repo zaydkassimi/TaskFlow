@@ -6,17 +6,12 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { errorMessage } from "@/lib/api/errors";
 import { RedirectIfAuthenticated } from "@/components/auth/guards";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Alert } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
+import { ArrowRightIcon } from "@/components/icons";
 
 function LoginForm() {
   const { login } = useAuth();
@@ -39,52 +34,58 @@ function LoginForm() {
   }
 
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Welcome back — sign in to continue.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {error ? <Alert tone="danger">{error}</Alert> : null}
-          <Field label="Email" htmlFor="email" required>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
-          </Field>
-          <Field label="Password" htmlFor="password" required>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-          </Field>
-          <Button type="submit" disabled={busy} className="mt-1 w-full">
-            {busy ? <Spinner className="h-4 w-4" /> : null}
-            Sign in
-          </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            No account yet?{" "}
-            <Link
-              href="/register"
-              className="font-medium text-primary-strong hover:underline"
-            >
-              Create one
-            </Link>
-          </p>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col">
+      <div className="mb-8">
+        <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-foreground">
+          Welcome back
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Sign in to continue to your workspace.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {error ? <Alert tone="danger">{error}</Alert> : null}
+        <Field label="Email" htmlFor="email" required>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="h-10"
+            required
+          />
+        </Field>
+        <Field label="Password" htmlFor="password" required>
+          <PasswordInput
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="h-10"
+            required
+          />
+        </Field>
+        <Button type="submit" size="lg" disabled={busy} className="mt-1 w-full">
+          {busy ? <Spinner className="h-4 w-4" /> : null}
+          Sign in
+          {!busy ? <ArrowRightIcon className="h-4 w-4" /> : null}
+        </Button>
+      </form>
+
+      <p className="mt-8 text-center text-sm text-muted-foreground">
+        No account yet?{" "}
+        <Link
+          href="/register"
+          className="font-medium text-primary-strong hover:underline"
+        >
+          Create one
+        </Link>
+      </p>
+    </div>
   );
 }
 

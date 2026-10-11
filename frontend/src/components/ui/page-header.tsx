@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
+  eyebrow?: string;
   title: string;
   description?: string;
   action?: React.ReactNode;
@@ -8,6 +9,7 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({
+  eyebrow,
   title,
   description,
   action,
@@ -20,7 +22,12 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
+        {eyebrow ? (
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-strong">
+            {eyebrow}
+          </p>
+        ) : null}
         <h1 className="text-[26px] font-semibold leading-tight tracking-tight text-foreground sm:text-[28px]">
           {title}
         </h1>

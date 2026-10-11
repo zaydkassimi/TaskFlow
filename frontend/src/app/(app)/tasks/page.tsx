@@ -6,18 +6,22 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { useApi } from "@/lib/hooks/use-api";
 import { tasksApi } from "@/lib/api/tasks";
 import { TASK_STATUSES } from "@/lib/api/types";
-import type { TaskStatus, TaskSummary } from "@/lib/api/types";
-import { formatDate, isOverdue } from "@/lib/format";
+import type { TaskPriority, TaskStatus, TaskSummary } from "@/lib/api/types";
+import { formatDate, isOverdue, titleCase } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { TASK_PRIORITY_TONE } from "@/lib/status";
 import { TaskDetailModal } from "@/components/tasks/task-detail-modal";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageSpinner } from "@/components/ui/spinner";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { AlertIcon, ClockIcon } from "@/components/icons";
+import {
+  AlertIcon,
+  ClockIcon,
+  FolderIcon,
+  InboxIcon,
+} from "@/components/icons";
 
 const STATUS_DOT: Record<TaskStatus, string> = {
   TODO: "bg-muted-foreground",
@@ -33,6 +37,13 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
   DONE: "Done",
 };
 
+const PRIORITY_TEXT: Record<TaskPriority, string> = {
+  LOW: "text-muted-foreground",
+  MEDIUM: "text-primary-strong",
+  HIGH: "text-warning",
+  URGENT: "text-destructive",
+};
+
 function TaskCard({
   task,
   onOpen,
@@ -46,40 +57,50 @@ function TaskCard({
     <button
       type="button"
       onClick={onOpen}
-      className="group flex w-full flex-col gap-2.5 rounded-md border border-border bg-card p-3 text-left transition-colors hover:border-ring/60 hover:bg-muted/30"
+      className="group flex w-full flex-col gap-3 rounded-lg border border-border bg-card p-3.5 text-left transition-all duration-150 hover:-translate-y-px hover:border-border-strong hover:shadow-md"
     >
-      <span className="text-sm font-medium leading-5 text-foreground">
-        {task.title}
-      </span>
-      <div className="flex flex-wrap items-center gap-2">
-        <StatusBadge
-          status={task.priority}
-          tone={TASK_PRIORITY_TONE[task.priority]}
-        />
-        {overdue ? (
-          <Badge tone="danger">
-            <AlertIcon className="h-3 w-3" />
-            Overdue
-          </Badge>
-        ) : null}
-      </div>
-      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between gap-2">
         <Link
           href={`/projects/${task.projectId}`}
-          className="truncate text-primary-strong hover:underline"
           onClick={(event) => event.stopPropagation()}
+          className="inline-flex min-w-0 items-center gap-1.5 rounded-md border border-border bg-surface/60 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          {task.projectName}
+          <FolderIcon className="h-3 w-3 shrink-0" />
+          <span className="truncate">{task.projectName}</span>
         </Link>
         <span
           className={cn(
-            "flex shrink-0 items-center gap-1",
-            overdue ? "font-medium text-destructive" : undefined,
+            "shrink-0 text-[11px] font-semibold uppercase tracking-wide",
+            PRIORITY_TEXT[task.priority],
           )}
         >
-          <ClockIcon className="h-3.5 w-3.5" />
-          {formatDate(task.dueDate)}
+          {titleCase(task.priority)}
         </span>
+      </div>
+
+      <span className="text-sm font-medium leading-5 text-foreground group-hover:text-primary-strong">
+        {task.title}
+      </span>
+
+      <div className="flex items-center justify-between gap-2 border-t border-border pt-2.5">
+        <span
+          className={cn(
+            "flex items-center gap-1.5 text-xs text-muted-foreground",
+            overdue && "font-medium text-destructive",
+          )}
+        >
+          {overdue ? (
+            <AlertIcon className="h-3.5 w-3.5" />
+          ) : (
+            <ClockIcon className="h-3.5 w-3.5" />
+          )}
+          {overdue ? "Overdue" : formatDate(task.dueDate)}
+        </span>
+        <Avatar
+          user={task.assignedTo}
+          size="sm"
+          className="h-6 w-6 text-[9px]"
+        />
       </div>
     </button>
   );
@@ -105,18 +126,26 @@ export default function MyTasksPage() {
     return groups;
   }, [data]);
 
+  const total = data?.content.length ?? 0;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        eyebrow="Workspace"
         title="My tasks"
-        description="Tasks assigned to you across all projects."
+        description="Everything assigned to you across all projects."
+        action={
+          data && total > 0 ? (
+            <Badge tone="neutral">{total} assigned</Badge>
+          ) : null
+        }
       />
 
       {error ? (
         <ErrorState message={error.message} onRetry={reload} />
       ) : loading && !data ? (
         <PageSpinner label="Loading your tasks…" />
-      ) : data && data.content.length === 0 ? (
+      ) : data && total === 0 ? (
         <EmptyState
           title="Nothing assigned yet"
           description="When someone assigns a task to you, it will show up here."
@@ -128,30 +157,31 @@ export default function MyTasksPage() {
             return (
               <div
                 key={status}
-                className="flex flex-col gap-3 rounded-lg border border-border bg-muted/20 p-3"
+                className="flex flex-col gap-3 rounded-xl border border-border bg-surface/30 p-3"
               >
                 <div className="flex items-center justify-between gap-2 px-0.5">
                   <div className="flex items-center gap-2">
                     <span
-                      className={cn(
-                        "h-2 w-2 rounded-full",
-                        STATUS_DOT[status],
-                      )}
+                      className={cn("h-2 w-2 rounded-full", STATUS_DOT[status])}
                       aria-hidden="true"
                     />
-                    <span className="text-sm font-semibold text-foreground">
+                    <span className="text-[13px] font-semibold tracking-tight text-foreground">
                       {STATUS_LABEL[status]}
                     </span>
                   </div>
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-md bg-muted px-1.5 text-xs font-medium tabular-nums text-muted-foreground">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-md bg-muted px-1.5 text-[11px] font-medium tabular-nums text-muted-foreground">
                     {columnTasks.length}
                   </span>
                 </div>
+
                 <div className="flex flex-col gap-2">
                   {columnTasks.length === 0 ? (
-                    <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
-                      No tasks
-                    </p>
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-8 text-center">
+                      <InboxIcon className="h-4 w-4 text-muted-foreground/60" />
+                      <span className="text-xs text-muted-foreground">
+                        No tasks
+                      </span>
+                    </div>
                   ) : (
                     columnTasks.map((task) => (
                       <TaskCard

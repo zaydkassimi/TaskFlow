@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -30,6 +29,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PageSpinner } from "@/components/ui/spinner";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchInput } from "@/components/ui/search-input";
+import { SegmentedControl } from "@/components/ui/segmented";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -47,6 +47,17 @@ const ROLE_TONE: Record<Role, "primary" | "neutral" | "success"> = {
   MANAGER: "success",
   MEMBER: "neutral",
 };
+
+const ROLE_LABEL: Record<Role, string> = {
+  ADMIN: "Admin",
+  MANAGER: "Manager",
+  MEMBER: "Member",
+};
+
+const ROLE_FILTERS: { value: Role | ""; label: string }[] = [
+  { value: "", label: "All" },
+  ...ROLES.map((role) => ({ value: role as Role | "", label: ROLE_LABEL[role] })),
+];
 
 interface UserModalState {
   mode: "create" | "edit";
@@ -187,7 +198,7 @@ function UserFormModal({
             >
               {ROLES.map((r) => (
                 <option key={r} value={r}>
-                  {r.charAt(0) + r.slice(1).toLowerCase()}
+                  {ROLE_LABEL[r]}
                 </option>
               ))}
             </Select>
@@ -266,6 +277,7 @@ function UsersManager() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        eyebrow="Administration"
         title="Users"
         description="Manage accounts, roles and access."
         action={
@@ -279,174 +291,171 @@ function UsersManager() {
       {error ? (
         <ErrorState message={error.message} onRetry={reload} />
       ) : (
-        <Card>
-          <CardContent className="flex flex-col gap-4 p-4 sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <form
-                className="flex flex-1 gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  applyFilters();
-                }}
-              >
-                <SearchInput
-                  placeholder="Search by name or email…"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-                <Button type="submit" variant="secondary">
-                  Search
-                </Button>
-              </form>
-              <Select
-                className="w-40"
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col gap-3 border-b border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+            <form
+              className="flex flex-1 gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                applyFilters();
+              }}
+            >
+              <SearchInput
+                placeholder="Search by name or email…"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </form>
+            <div className="overflow-x-auto">
+              <SegmentedControl
+                size="sm"
+                ariaLabel="Filter by role"
                 value={role}
-                onChange={(e) => {
-                  setRole(e.target.value as Role | "");
+                onChange={(value) => {
+                  setRole(value);
                   setPage(0);
                 }}
-              >
-                <option value="">All roles</option>
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {r.charAt(0) + r.slice(1).toLowerCase()}
-                  </option>
-                ))}
-              </Select>
+                options={ROLE_FILTERS}
+              />
             </div>
+          </div>
 
-            {data && data.content.length === 0 ? (
+          {data && data.content.length === 0 ? (
+            <div className="p-4">
               <EmptyState
                 title="No users found"
                 description="Try a different search, or create a new user account."
               />
-            ) : (
-              <div className="-mx-2 overflow-x-auto">
-                <table className="w-full min-w-[680px] border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                      <th className="px-2 py-2.5 font-medium">User</th>
-                      <th className="px-2 py-2.5 font-medium">Role</th>
-                      <th className="px-2 py-2.5 font-medium">Status</th>
-                      <th className="px-2 py-2.5 font-medium">Created</th>
-                      <th className="px-2 py-2.5 text-right font-medium">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data?.content.map((item) => {
-                      const isSelf = user?.id === item.id;
-                      return (
-                        <tr
-                          key={item.id}
-                          className="border-b border-border last:border-0 transition-colors hover:bg-muted/40"
-                        >
-                          <td className="px-2 py-3">
-                            <div className="flex items-center gap-3">
-                              <Avatar user={item} size="sm" />
-                              <div className="min-w-0">
-                                <p className="font-medium text-foreground">
-                                  {fullName(item)}
-                                  {isSelf ? (
-                                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                                      (you)
-                                    </span>
-                                  ) : null}
-                                </p>
-                                <p className="truncate text-xs text-muted-foreground">
-                                  {item.email}
-                                </p>
-                              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[680px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-surface/40 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <th className="px-4 py-3 font-medium">User</th>
+                    <th className="px-4 py-3 font-medium">Role</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Created</th>
+                    <th className="px-4 py-3 text-right font-medium">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data?.content.map((item) => {
+                    const isSelf = user?.id === item.id;
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-b border-border last:border-0 transition-colors hover:bg-surface/50"
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar user={item} size="sm" />
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground">
+                                {fullName(item)}
+                                {isSelf ? (
+                                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                                    (you)
+                                  </span>
+                                ) : null}
+                              </p>
+                              <p className="truncate text-xs text-muted-foreground">
+                                {item.email}
+                              </p>
                             </div>
-                          </td>
-                          <td className="px-2 py-3">
-                            <Badge tone={ROLE_TONE[item.role]}>
-                              {item.role.charAt(0) +
-                                item.role.slice(1).toLowerCase()}
-                            </Badge>
-                          </td>
-                          <td className="px-2 py-3">
-                            <span className="flex items-center gap-1.5 text-sm">
-                              <span
-                                className={cn(
-                                  "h-1.5 w-1.5 rounded-full",
-                                  item.enabled ? "bg-success" : "bg-muted-foreground",
-                                )}
-                                aria-hidden="true"
-                              />
-                              <span
-                                className={
-                                  item.enabled
-                                    ? "text-foreground"
-                                    : "text-muted-foreground"
-                                }
-                              >
-                                {item.enabled ? "Active" : "Disabled"}
-                              </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge tone={ROLE_TONE[item.role]}>
+                            {ROLE_LABEL[item.role]}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="flex items-center gap-1.5 text-sm">
+                            <span
+                              className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                item.enabled
+                                  ? "bg-success"
+                                  : "bg-muted-foreground",
+                              )}
+                              aria-hidden="true"
+                            />
+                            <span
+                              className={
+                                item.enabled
+                                  ? "text-foreground"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {item.enabled ? "Active" : "Disabled"}
                             </span>
-                          </td>
-                          <td className="px-2 py-3 text-muted-foreground">
-                            {formatDate(item.createdAt)}
-                          </td>
-                          <td className="px-2 py-3">
-                            <div className="flex justify-end">
-                              <DropdownMenu
-                                trigger={
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground"
-                                    aria-label={`Actions for ${fullName(item)}`}
-                                  >
-                                    <MoreHorizontalIcon className="h-4 w-4" />
-                                  </Button>
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {formatDate(item.createdAt)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end">
+                            <DropdownMenu
+                              trigger={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground"
+                                  aria-label={`Actions for ${fullName(item)}`}
+                                >
+                                  <MoreHorizontalIcon className="h-4 w-4" />
+                                </Button>
+                              }
+                            >
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setModal({ mode: "edit", user: item })
                                 }
                               >
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    setModal({ mode: "edit", user: item })
-                                  }
-                                >
-                                  <PencilIcon className="h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  disabled={busy || isSelf}
-                                  onClick={() => handleToggleEnabled(item)}
-                                >
-                                  {item.enabled ? "Disable" : "Enable"}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  disabled={busy || isSelf}
-                                  onClick={() => setDeleteTarget(item)}
-                                  className="text-destructive hover:bg-destructive/10"
-                                >
-                                  <TrashIcon className="h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenu>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                                <PencilIcon className="h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                disabled={busy || isSelf}
+                                onClick={() => handleToggleEnabled(item)}
+                              >
+                                {item.enabled ? "Disable" : "Enable"}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                disabled={busy || isSelf}
+                                onClick={() => setDeleteTarget(item)}
+                                className="text-destructive hover:bg-destructive/10"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenu>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-            {data ? (
+          {data && data.totalPages > 1 ? (
+            <div className="px-4 py-3">
               <Pagination
                 page={data.page}
                 totalPages={data.totalPages}
                 onPageChange={setPage}
                 disabled={loading}
               />
-            ) : null}
-          </CardContent>
-        </Card>
+            </div>
+          ) : null}
+        </div>
       )}
 
       {modal ? (

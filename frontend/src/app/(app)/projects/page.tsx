@@ -24,7 +24,13 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PageSpinner } from "@/components/ui/spinner";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchInput } from "@/components/ui/search-input";
-import { CheckSquareIcon, PlusIcon } from "@/components/icons";
+import { SegmentedControl } from "@/components/ui/segmented";
+import {
+  CheckSquareIcon,
+  GridIcon,
+  ListIcon,
+  PlusIcon,
+} from "@/components/icons";
 
 const PAGE_SIZE = 12;
 
@@ -157,6 +163,7 @@ function ProjectsManager() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ProjectStatus | "">("");
   const [mine, setMine] = useState(false);
+  const [view, setView] = useState<"grid" | "list">("grid");
   const [createOpen, setCreateOpen] = useState(false);
 
   const fetcher = useCallback(
@@ -184,8 +191,9 @@ function ProjectsManager() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        eyebrow="Workspace"
         title="Projects"
-        description="Everything your team is working on."
+        description="Everything your team is working on, in one place."
         action={
           canCreate(user?.role) ? (
             <Button onClick={() => setCreateOpen(true)}>
@@ -196,7 +204,7 @@ function ProjectsManager() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/60 p-3 sm:flex-row sm:items-center">
         <form
           className="flex flex-1 gap-2"
           onSubmit={(e) => {
@@ -209,17 +217,14 @@ function ProjectsManager() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button type="submit" variant="secondary">
-            Search
-          </Button>
         </form>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label
             className={cn(
-              "flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors select-none",
+              "flex h-9 cursor-pointer select-none items-center gap-2 rounded-md border px-3 text-[13px] font-medium transition-colors",
               mine
                 ? "border-primary/30 bg-primary/10 text-primary-strong"
-                : "border-border bg-background/40 text-muted-foreground hover:text-foreground",
+                : "border-border bg-surface/50 text-muted-foreground hover:text-foreground",
             )}
           >
             <input
@@ -232,7 +237,7 @@ function ProjectsManager() {
               }}
             />
             <CheckSquareIcon className="h-4 w-4" />
-            My projects
+            Mine
           </label>
           <Select
             className="w-40"
@@ -249,6 +254,15 @@ function ProjectsManager() {
               </option>
             ))}
           </Select>
+          <SegmentedControl
+            ariaLabel="Project layout"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: "grid", ariaLabel: "Grid view", icon: GridIcon },
+              { value: "list", ariaLabel: "List view", icon: ListIcon },
+            ]}
+          />
         </div>
       </div>
 
@@ -271,6 +285,12 @@ function ProjectsManager() {
             ) : null
           }
         />
+      ) : view === "list" ? (
+        <div className="flex flex-col gap-2">
+          {data?.content.map((project) => (
+            <ProjectCard key={project.id} project={project} layout="list" />
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {data?.content.map((project) => (

@@ -61,13 +61,13 @@ export function Modal({
       aria-modal="true"
     >
       <div
-        className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[3px] animate-overlay-in"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
         className={cn(
-          "relative z-10 flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-xl border border-border bg-popover shadow-lg",
+          "relative z-10 flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-xl border border-border bg-popover shadow-lg animate-panel-in",
           SIZES[size],
         )}
       >
