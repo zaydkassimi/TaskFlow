@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -84,6 +85,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex,
             HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Malformed or missing request body", request.getRequestURI());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex,
+            HttpServletRequest request) {
+        log.warn("Data integrity violation for {} {}: {}", request.getMethod(), request.getRequestURI(),
+                ex.getMostSpecificCause().getMessage());
+        return build(HttpStatus.CONFLICT, "Operation conflicts with existing data", request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)
