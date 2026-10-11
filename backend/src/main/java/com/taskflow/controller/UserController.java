@@ -7,10 +7,12 @@ import com.taskflow.dto.request.UpdateStatusRequest;
 import com.taskflow.dto.request.UpdateUserRequest;
 import com.taskflow.dto.response.PageResponse;
 import com.taskflow.dto.response.UserResponse;
+import com.taskflow.dto.response.UserSummaryResponse;
 import com.taskflow.entity.enums.Role;
 import com.taskflow.security.SecurityUtils;
 import com.taskflow.service.UserService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -55,6 +57,11 @@ public class UserController {
                 Math.max(1, Math.min(size, MAX_PAGE_SIZE)),
                 Sort.by(Sort.Direction.DESC, "createdAt"));
         return userService.list(pageable, role, search);
+    }
+
+    @GetMapping("/directory")
+    public List<UserSummaryResponse> directory() {
+        return userService.directory();
     }
 
     @GetMapping("/me")

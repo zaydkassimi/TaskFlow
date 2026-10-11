@@ -164,6 +164,24 @@ class UserControllerIntegrationTest {
     }
 
     @Test
+    void unauthenticatedDirectoryIsRejected() throws Exception {
+        mockMvc.perform(get("/api/users/directory")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void anyAuthenticatedUserCanReadDirectory() throws Exception {
+        Session member = login(MEMBER_EMAIL, MEMBER_PASSWORD);
+        MvcResult result = mockMvc.perform(get("/api/users/directory")
+                        .header("Authorization", bearer(member)))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertTrue(result.getResponse().getContentAsString(StandardCharsets.UTF_8)
+                .contains("admin@taskflow.local"));
+        assertTrue(result.getResponse().getContentAsString(StandardCharsets.UTF_8)
+                .contains(MEMBER_EMAIL));
+    }
+
+    @Test
     void memberCannotDeleteUsers() throws Exception {
         Session member = login(MEMBER_EMAIL, MEMBER_PASSWORD);
         assertEquals(403, mockMvc.perform(delete("/api/users/" + (member.userId() + 1))

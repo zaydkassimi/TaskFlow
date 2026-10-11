@@ -2,6 +2,7 @@ package com.taskflow.repository;
 
 import com.taskflow.entity.User;
 import com.taskflow.entity.enums.Role;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findByEmailIgnoreCase(String email);
 
     boolean existsByEmail(String email);
+
+    List<User> findByEnabledTrueOrderByLastNameAscFirstNameAsc();
 
     Page<User> findByRole(Role role, Pageable pageable);
 

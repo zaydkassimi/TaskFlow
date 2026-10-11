@@ -6,6 +6,7 @@ import com.taskflow.dto.request.UpdateProfileRequest;
 import com.taskflow.dto.request.UpdateUserRequest;
 import com.taskflow.dto.response.PageResponse;
 import com.taskflow.dto.response.UserResponse;
+import com.taskflow.dto.response.UserSummaryResponse;
 import com.taskflow.entity.User;
 import com.taskflow.entity.enums.Role;
 import com.taskflow.exception.DuplicateResourceException;
@@ -14,6 +15,7 @@ import com.taskflow.exception.UnauthorizedOperationException;
 import com.taskflow.mapper.UserMapper;
 import com.taskflow.repository.UserRepository;
 import com.taskflow.repository.specification.UserSpecifications;
+import java.util.List;
 import java.util.Locale;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,6 +43,13 @@ public class UserService {
         return PageResponse.from(
                 userRepository.findAll(UserSpecifications.withFilters(role, search), pageable),
                 userMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserSummaryResponse> directory() {
+        return userRepository.findByEnabledTrueOrderByLastNameAscFirstNameAsc().stream()
+                .map(userMapper::toSummary)
+                .toList();
     }
 
     @Transactional(readOnly = true)
