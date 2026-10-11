@@ -54,14 +54,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authApi
       .refresh()
       .then((data) => {
-        if (!cancelled) {
-          applyAuthResponse(data);
+        if (cancelled) {
+          return;
         }
+        applyAuthResponse(data);
       })
       .catch(() => {
-        if (!cancelled) {
-          setStatus("anonymous");
+        if (cancelled) {
+          return;
         }
+        invalidate();
       });
     return () => {
       cancelled = true;

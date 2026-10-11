@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TASK_STATUS_DOT } from "@/lib/status";
 
 interface TaskFormModalProps {
   task: Task | null;
@@ -139,17 +140,15 @@ export function TaskFormModal({
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Priority" htmlFor="task-priority" required>
-            <Select
+            <Select<TaskPriority>
               id="task-priority"
               value={priority}
-              onChange={(e) => setPriority(e.target.value as TaskPriority)}
-            >
-              {TASK_PRIORITIES.map((p) => (
-                <option key={p} value={p}>
-                  {titleCase(p)}
-                </option>
-              ))}
-            </Select>
+              onChange={(v) => setPriority(v)}
+              options={TASK_PRIORITIES.map((p) => ({
+                value: p,
+                label: titleCase(p),
+              }))}
+            />
           </Field>
           <Field label="Due date" htmlFor="task-due">
             <Input
@@ -162,17 +161,16 @@ export function TaskFormModal({
         </div>
         {creating ? (
           <Field label="Status" htmlFor="task-status" required>
-            <Select
+            <Select<TaskStatus>
               id="task-status"
               value={status}
-              onChange={(e) => setStatus(e.target.value as TaskStatus)}
-            >
-              {TASK_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {titleCase(s)}
-                </option>
-              ))}
-            </Select>
+              onChange={(v) => setStatus(v)}
+              options={TASK_STATUSES.map((s) => ({
+                value: s,
+                label: titleCase(s),
+                dot: TASK_STATUS_DOT[s],
+              }))}
+            />
           </Field>
         ) : null}
         {canAssign ? (
@@ -181,18 +179,18 @@ export function TaskFormModal({
             htmlFor="task-assignee"
             hint="Assignment can also be changed from the task detail view."
           >
-            <Select
+            <Select<string>
               id="task-assignee"
               value={assigneeId}
-              onChange={(e) => setAssigneeId(e.target.value)}
-            >
-              <option value="">Unassigned</option>
-              {members.map((member) => (
-                <option key={member.id} value={String(member.id)}>
-                  {fullName(member)}
-                </option>
-              ))}
-            </Select>
+              onChange={(v) => setAssigneeId(v)}
+              options={[
+                { value: "", label: "Unassigned" },
+                ...members.map((member) => ({
+                  value: String(member.id),
+                  label: fullName(member),
+                })),
+              ]}
+            />
           </Field>
         ) : null}
       </form>

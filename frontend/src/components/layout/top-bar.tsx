@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { fullName } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { BrandMark } from "@/components/brand";
 import {
@@ -14,10 +13,8 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
-  BellIcon,
   ChevronRightIcon,
   LogOutIcon,
-  SearchIcon,
   SettingsIcon,
   UserIcon,
 } from "@/components/icons";
@@ -157,31 +154,7 @@ export function TopBar() {
 
       <span className="flex-1" />
 
-      <button
-        type="button"
-        aria-label="Search (coming soon)"
-        title="Search is coming soon"
-        className={cn(
-          "group hidden h-9 w-full max-w-xs items-center gap-2 rounded-md border border-border bg-surface/60 px-3 text-sm text-muted-foreground transition-colors hover:border-border-strong md:flex",
-        )}
-      >
-        <SearchIcon className="h-4 w-4" />
-        <span className="flex-1 text-left text-[13px]">Search…</span>
-        <kbd className="flex items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-          ⌘K
-        </kbd>
-      </button>
-
-      <button
-        type="button"
-        aria-label="Notifications (coming soon)"
-        title="Notifications are coming soon"
-        className="relative flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <BellIcon className="h-4 w-4" />
-        <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary-strong" />
-      </button>
-
+      <span className="flex-1" aria-hidden="true" />
       <span className="h-6 w-px bg-border" aria-hidden="true" />
 
       <TopBarUser />

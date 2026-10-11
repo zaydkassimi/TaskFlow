@@ -21,6 +21,7 @@ import {
   SparkleIcon,
   UserIcon,
 } from "@/components/icons";
+import { canCreateProject } from "@/lib/permissions";
 
 const STATUS_META: Record<
   string,
@@ -360,12 +361,14 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button asChild>
-              <Link href="/projects">
-                <FolderIcon className="h-4 w-4" />
-                New project
-              </Link>
-            </Button>
+            {canCreateProject(user?.role) ? (
+              <Button asChild>
+                <Link href="/projects">
+                  <FolderIcon className="h-4 w-4" />
+                  New project
+                </Link>
+              </Button>
+            ) : null}
             <Button variant="outline" asChild>
               <Link href="/tasks">
                 <CheckSquareIcon className="h-4 w-4" />

@@ -9,6 +9,7 @@ import { PROJECT_STATUSES } from "@/lib/api/types";
 import type { CreateProjectRequest, ProjectStatus } from "@/lib/api/types";
 import { titleCase } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { canCreateProject } from "@/lib/permissions";
 import { MemberPicker } from "@/components/projects/member-picker";
 import { ProjectCard } from "@/components/projects/project-card";
 import { Button } from "@/components/ui/button";
@@ -31,12 +32,11 @@ import {
   ListIcon,
   PlusIcon,
 } from "@/components/icons";
+import { PROJECT_STATUS_DOT } from "@/lib/status";
 
 const PAGE_SIZE = 12;
 
-function canCreate(role?: string): boolean {
-  return role === "ADMIN" || role === "MANAGER";
-}
+
 
 function CreateProjectModal({
   onClose,
@@ -118,17 +118,16 @@ function CreateProjectModal({
           />
         </Field>
         <Field label="Status" htmlFor="project-status" required>
-          <Select
+          <Select<ProjectStatus>
             id="project-status"
             value={status}
-            onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-          >
-            {PROJECT_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {titleCase(s)}
-              </option>
-            ))}
-          </Select>
+            onChange={(v) => setStatus(v)}
+            options={PROJECT_STATUSES.map((s) => ({
+              value: s,
+              label: titleCase(s),
+              dot: PROJECT_STATUS_DOT[s],
+            }))}
+          />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Start date" htmlFor="project-start">
@@ -195,7 +194,7 @@ function ProjectsManager() {
         title="Projects"
         description="Everything your team is working on, in one place."
         action={
-          canCreate(user?.role) ? (
+          canCreateProject(user?.role) ? (
             <Button onClick={() => setCreateOpen(true)}>
               <PlusIcon className="h-4 w-4" />
               New project
@@ -239,21 +238,22 @@ function ProjectsManager() {
             <CheckSquareIcon className="h-4 w-4" />
             Mine
           </label>
-          <Select
+          <Select<ProjectStatus | "">
             className="w-40"
             value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as ProjectStatus | "");
+            onChange={(v) => {
+              setStatus(v);
               setPage(0);
             }}
-          >
-            <option value="">All statuses</option>
-            {PROJECT_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {titleCase(s)}
-              </option>
-            ))}
-          </Select>
+            options={[
+              { value: "", label: "All statuses" },
+              ...PROJECT_STATUSES.map((s) => ({
+                value: s,
+                label: titleCase(s),
+                dot: PROJECT_STATUS_DOT[s],
+              })),
+            ]}
+          />
           <SegmentedControl
             ariaLabel="Project layout"
             value={view}
@@ -272,17 +272,17 @@ function ProjectsManager() {
         <EmptyState
           title="No projects found"
           description={
-            canCreate(user?.role)
-              ? "Create a project to get started."
-              : "You are not part of any projects yet."
-          }
-          action={
-            canCreate(user?.role) ? (
-              <Button onClick={() => setCreateOpen(true)}>
-                <PlusIcon className="h-4 w-4" />
-                New project
-              </Button>
-            ) : null
+          canCreateProject(user?.role)
+            ? "Create a project to get started."
+            : "You are not part of any projects yet."
+        }
+        action={
+          canCreateProject(user?.role) ? (
+            <Button onClick={() => setCreateOpen(true)}>
+              <PlusIcon className="h-4 w-4" />
+              New project
+            </Button>
+          ) : null
           }
         />
       ) : view === "list" ? (

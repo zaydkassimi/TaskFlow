@@ -31,6 +31,7 @@ import {
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
+  PROJECT_STATUS_DOT,
   PROJECT_STATUS_TONE,
   TASK_STATUS_TONE,
 } from "@/lib/status";
@@ -174,17 +175,16 @@ function EditProjectModal({
           />
         </Field>
         <Field label="Status" htmlFor="project-status" required>
-          <Select
+          <Select<ProjectStatus>
             id="project-status"
             value={status}
-            onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-          >
-            {PROJECT_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {titleCase(s)}
-              </option>
-            ))}
-          </Select>
+            onChange={(v) => setStatus(v)}
+            options={PROJECT_STATUSES.map((s) => ({
+              value: s,
+              label: titleCase(s),
+              dot: PROJECT_STATUS_DOT[s],
+            }))}
+          />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Start date" htmlFor="project-start">
@@ -256,22 +256,20 @@ function AddMemberControl({
     <div className="flex flex-col gap-2">
       {message ? <Alert tone="danger">{message}</Alert> : null}
       <div className="flex items-center gap-2">
-        <Select
+        <Select<string>
           className="flex-1"
           value={available.length > 0 ? value : ""}
-          onChange={(e) => setSelected(e.target.value)}
+          onChange={(v) => setSelected(v)}
           disabled={available.length === 0 || busy}
-        >
-          {available.length === 0 ? (
-            <option value="">Everyone is already a member</option>
-          ) : (
-            available.map((member) => (
-              <option key={member.id} value={String(member.id)}>
-                {fullName(member)}
-              </option>
-            ))
-          )}
-        </Select>
+          options={
+            available.length === 0
+              ? [{ value: "", label: "Everyone is already a member", disabled: true }]
+              : available.map((member) => ({
+                  value: String(member.id),
+                  label: fullName(member),
+                }))
+          }
+        />
         <Button
           variant="outline"
           onClick={handleAdd}

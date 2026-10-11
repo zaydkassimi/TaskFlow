@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { PageSpinner } from "@/components/ui/spinner";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     return <PageSpinner label="Checking session…" />;
   }
 
-  if (status === "anonymous") {
+  if (status === "anonymous" || !user) {
     return null;
   }
 
@@ -31,14 +31,14 @@ export function RedirectIfAuthenticated({
 }: {
   children: React.ReactNode;
 }) {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && user) {
       router.replace("/dashboard");
     }
-  }, [status, router]);
+  }, [status, user, router]);
 
   if (status === "loading") {
     return <PageSpinner label="Checking session…" />;

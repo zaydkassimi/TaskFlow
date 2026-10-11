@@ -191,17 +191,15 @@ function UserFormModal({
         ) : null}
         <div className="grid grid-cols-2 gap-3">
           <Field label="Role" htmlFor="user-role" required>
-            <Select
+            <Select<Role>
               id="user-role"
               value={role}
-              onChange={(e) => setRole(e.target.value as Role)}
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {ROLE_LABEL[r]}
-                </option>
-              ))}
-            </Select>
+              onChange={(v) => setRole(v)}
+              options={ROLES.map((r) => ({
+                value: r,
+                label: ROLE_LABEL[r],
+              }))}
+            />
           </Field>
           <div className="flex items-end pb-2">
             <label className="flex items-center gap-2 text-sm font-medium text-foreground">

@@ -21,7 +21,7 @@ import {
   formatRelative,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { TASK_STATUS_TONE, TASK_PRIORITY_TONE } from "@/lib/status";
+import { TASK_STATUS_DOT, TASK_STATUS_TONE, TASK_PRIORITY_TONE } from "@/lib/status";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -283,35 +283,32 @@ function TaskDetailContent({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {canChangeStatus ? (
               <Field label="Status">
-                <Select
+                <Select<TaskStatus>
                   value={status}
                   disabled={busy}
-                  onChange={(e) =>
-                    handleSaveStatus(e.target.value as TaskStatus)
-                  }
-                >
-                  {TASK_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {titleCase(s)}
-                    </option>
-                  ))}
-                </Select>
+                  onChange={(v) => handleSaveStatus(v)}
+                  options={TASK_STATUSES.map((s) => ({
+                    value: s,
+                    label: titleCase(s),
+                    dot: TASK_STATUS_DOT[s],
+                  }))}
+                />
               </Field>
             ) : null}
             {canAssign ? (
               <Field label="Assignee">
-                <Select
+                <Select<string>
                   value={assigneeId}
                   disabled={busy}
-                  onChange={(e) => handleAssign(e.target.value)}
-                >
-                  <option value="">Unassigned</option>
-                  {members.map((member) => (
-                    <option key={member.id} value={String(member.id)}>
-                      {fullName(member)}
-                    </option>
-                  ))}
-                </Select>
+                  onChange={(v) => handleAssign(v)}
+                  options={[
+                    { value: "", label: "Unassigned" },
+                    ...members.map((member) => ({
+                      value: String(member.id),
+                      label: fullName(member),
+                    })),
+                  ]}
+                />
               </Field>
             ) : null}
           </div>
@@ -341,17 +338,15 @@ function TaskDetailContent({
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Priority" htmlFor="detail-priority" required>
-              <Select
+              <Select<TaskPriority>
                 id="detail-priority"
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-              >
-                {TASK_PRIORITIES.map((p) => (
-                  <option key={p} value={p}>
-                    {titleCase(p)}
-                  </option>
-                ))}
-              </Select>
+                onChange={(v) => setPriority(v)}
+                options={TASK_PRIORITIES.map((p) => ({
+                  value: p,
+                  label: titleCase(p),
+                }))}
+              />
             </Field>
             <Field label="Due date" htmlFor="detail-due">
               <Input

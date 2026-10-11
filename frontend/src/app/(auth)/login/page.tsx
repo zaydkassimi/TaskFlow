@@ -50,7 +50,9 @@ function LoginForm() {
           <Input
             id="email"
             type="email"
-            autoComplete="email"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -61,7 +63,7 @@ function LoginForm() {
         <Field label="Password" htmlFor="password" required>
           <PasswordInput
             id="password"
-            autoComplete="current-password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"

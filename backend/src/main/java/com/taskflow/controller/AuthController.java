@@ -90,7 +90,6 @@ public class AuthController {
                 .secure(secureCookie)
                 .sameSite("Lax")
                 .path(REFRESH_COOKIE_PATH)
-                .maxAge(jwtProperties.refreshTtl())
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
