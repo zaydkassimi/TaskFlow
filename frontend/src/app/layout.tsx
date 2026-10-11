@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   },
   description:
     "TaskFlow — a collaborative project and task management platform.",
+  icons: {
+    icon: "/image/logo.png",
+    apple: "/image/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

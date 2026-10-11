@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { fullName } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
+import { BrandMark } from "@/components/brand";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -122,6 +123,14 @@ export function TopBar() {
 
   return (
     <header className="sticky top-0 z-30 hidden h-14 items-center gap-4 border-b border-border bg-background/80 px-4 backdrop-blur-md lg:flex xl:px-8">
+      <Link
+        href="/dashboard"
+        aria-label="TaskFlow dashboard"
+        className="flex shrink-0 items-center"
+      >
+        <BrandMark className="h-7 w-7" />
+      </Link>
+      <span className="h-5 w-px bg-border" aria-hidden="true" />
       <nav aria-label="Breadcrumb" className="min-w-0">
         <ol className="flex items-center gap-1.5 text-[13px]">
           {crumbs.map((crumb, index) => (

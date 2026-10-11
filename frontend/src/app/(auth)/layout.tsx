@@ -34,7 +34,7 @@ export default function AuthLayout({
         />
 
         <div className="relative z-10 flex items-center gap-2.5">
-          <BrandMark className="h-9 w-9 rounded-[11px] text-base" />
+          <BrandMark className="h-9 w-9" />
           <span className="text-[17px] font-semibold tracking-tight text-foreground">
             TaskFlow
           </span>
